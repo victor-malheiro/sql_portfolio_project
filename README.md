@@ -69,12 +69,12 @@ ORDER BY date
 ```
 SELECT location, date, total_cases, new_cases, total_deaths, population
 FROM CovidDeaths
-WHERE location = 'Portugal' and new_cases is not NULL
+WHERE location = 'Portugal' AND new_cases IS NOT NULL
 ORDER BY date
 
 SELECT location, date, total_cases, new_cases, total_deaths, population
 FROM CovidDeaths
-WHERE location = 'Portugal' and total_deaths is not NULL
+WHERE location = 'Portugal' AND total_deaths IS NOT NULL
 ORDER BY date
 ```
 
@@ -82,9 +82,9 @@ ORDER BY date
 First we want to know if the Total Deaths is big in relation to the total cases for Portugal
 
 ```
-SELECT location, date, total_cases,total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
+SELECT location, date, total_cases,total_deaths, (total_deaths/total_cases)*100 AS DeathPercentage
 FROM CovidDeaths
-WHERE location LIKE '%Portugal%' and total_deaths IS NOT NULL 
+WHERE location LIKE '%Portugal%' AND total_deaths IS NOT NULL 
 ORDER BY DeathPercentage DESC
 ```
 
@@ -97,9 +97,9 @@ ORDER BY DeathPercentage DESC
 <div align="justify">Since the vírus is becoming endemic we can see that the percentage of the population infected is increasing through time, but the death percentage is decreasing.</div></br>
 
 ```
-SELECT location, date, total_cases,population, (total_cases/population)*100 as PercentPopInfected
+SELECT location, date, total_cases,population, (total_cases/population)*100 AS PercentPopInfected
 FROM CovidDeaths
-WHERE location like '%Portugal%' and total_deaths is not NULL 
+WHERE location LIKE '%Portugal%' AND total_deaths IS NOT NULL 
 ORDER BY PercentPopInfected DESC
 ```
 
@@ -108,7 +108,7 @@ ORDER BY PercentPopInfected DESC
 
 **3 - Countries with Highest Infection Rate compared to Population**
 ````
-SELECT location, population, MAX(total_cases) as HighestInfectionCount, Max((total_cases/population)*100) as PercentPopInfected
+SELECT location, population, MAX(total_cases) AS HighestInfectionCount, Max((total_cases/population)*100) AS PercentPopInfected
 FROM CovidDeaths
 GROUP BY location, population
 ORDER BY PercentPopInfected DESC
@@ -120,7 +120,7 @@ We can see that the country with the highest percentage of population infected i
 
 **4 - Countries with Highest Death Count per Population**
 ````
-SELECT location, MAX(Total_deaths as int) as TotalDeathCount
+SELECT location, MAX(Total_deaths) AS TotalDeathCount
 FROM CovidDeaths
 WHERE continent IS NOT NULL 
 GROUP BY location
@@ -137,13 +137,13 @@ ORDER BY TotalDeathCount DESC
 
 ````
 SELECT dea.continent, 
-	     dea.location, 
-	     dea.date, 
-	     dea.population, 
-	     vac.new_vaccinations, 
-	     SUM(vac.new_vaccinations) OVER (Partition by dea.Location Order by dea.location, dea.Date) AS RollingPeopleVaccinated
+       dea.location, 
+       dea.date, 
+       dea.population, 
+       vac.new_vaccinations, 
+       SUM(vac.new_vaccinations) OVER (Partition BY dea.Location Order BY dea.location, dea.Date) AS RollingPeopleVaccinated
 FROM CovidDeaths dea JOIN CovidVaccinations vac
-	ON dea.location = vac.location AND dea.date = vac.date
+     ON dea.location = vac.location AND dea.date = vac.date
 WHERE dea.continent IS NOT NULL 
 ORDER BY location, date
 ````
@@ -162,13 +162,13 @@ WITH PopVac (Continent, Location, Date, Population, New_Vaccinations, RollingPeo
 AS 
 (
 	SELECT dea.continent, 
-		     dea.location, 
-		     dea.date, 
-		     dea.population, 
-		     vac.new_vaccinations,
-		     SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
+	       dea.location, 
+	       dea.date, 
+	       dea.population, 
+	       vac.new_vaccinations,
+	       SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
 	FROM CovidDeaths dea JOIN CovidVaccinations vac
-		On dea.location = vac.location AND dea.date = vac.date
+	     On dea.location = vac.location AND dea.date = vac.date
 )
 SELECT *, (RollingPeopleVaccinated/Population)*100 AS PercPopVac
 FROM PopVac
@@ -196,13 +196,13 @@ Then i insert the results of the previous query into the table.
 ````
 INSERT INTO #PercentPopulationVaccinated
 SELECT dea.continent, 
-		     dea.location, 
-		     dea.date, 
-		     dea.population, 
-		     vac.new_vaccinations,
-		     SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
-	FROM CovidDeaths dea JOIN CovidVaccinations vac
-		On dea.location = vac.location AND dea.date = vac.date
+       dea.location, 
+       dea.date, 
+       dea.population, 
+       vac.new_vaccinations,
+       SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
+FROM CovidDeaths dea JOIN CovidVaccinations vac
+     On dea.location = vac.location AND dea.date = vac.date
 ````
 
 And finally, i can use the new table on a new query.
@@ -219,13 +219,13 @@ I created a view with the code below.
 ````
 CREATE VIEW PercentPopVac AS
 SELECT dea.continent, 
-		     dea.location, 
-		     dea.date, 
-		     dea.population, 
-		     vac.new_vaccinations,
-		     SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
-	FROM CovidDeaths dea JOIN CovidVaccinations vac
-		On dea.location = vac.location AND dea.date = vac.date 
+       dea.location, 
+       dea.date, 
+       dea.population, 
+       vac.new_vaccinations,
+       SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.Date) AS RollingPeopleVaccinated
+FROM CovidDeaths dea JOIN CovidVaccinations vac
+     On dea.location = vac.location AND dea.date = vac.date 
 ````
 
 And then i can create queries with it.
@@ -266,7 +266,7 @@ GO
 
 --- create partition function
 CREATE PARTITION FUNCTION CovidDeaths_Partition (datetime2(0))
-AS RANGE RIGHT FOR VALUES ('2020-06-01', '2020-07-01') ;  
+    AS RANGE RIGHT FOR VALUES ('2020-06-01', '2020-07-01') ;  
 GO  
 
 --- create scheme
