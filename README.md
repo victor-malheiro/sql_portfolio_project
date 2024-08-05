@@ -79,6 +79,7 @@ ORDER BY date
 ```
 
 **1 - Total Cases vs Total Deaths in a certain country**
+
 First we want to know if the Total Deaths is big in relation to the total cases for Portugal
 
 ```
